@@ -15,8 +15,8 @@ void Simulator::render() {
     particles->render(this);
 }
 
-void Simulator::update() {
-    particles->update(mouse, width, height);
+void Simulator::update(float dt) {
+    particles->update(mouse, width, height, dt);
     if (mouse_pressed) {
         mouse.activate();
         mouse.update_position(Simulator::GetMousePos());
@@ -30,7 +30,7 @@ bool Simulator::OnUserCreate() {
 
 bool Simulator::OnUserUpdate(float fElapsedTime) {
     check_events();
-    update();
+    update(fElapsedTime);
     render();
     return true;
 }

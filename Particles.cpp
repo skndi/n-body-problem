@@ -23,7 +23,7 @@ Particles::Particles(const int& particle_count, const int& mass, const olc::Pixe
 
 };
 
-void Particles::update_gravity_velocities(const GravitySource& source) {
+void Particles::update_gravity_velocities(const GravitySource& source, float dt) {
 
 	olc::vf2d src_position = source.get_position();
 	float source_mass = source.get_mass();
@@ -31,6 +31,7 @@ void Particles::update_gravity_velocities(const GravitySource& source) {
 	__m256 src_y_pos = _mm256_set1_ps(src_position.y);
 	__m256 src_mass = _mm256_set1_ps(source_mass);
 	__m256 force_const = _mm256_mul_ps(_mm256_mul_ps(grav_const, mass_const), src_mass);
+	__m256 delta_time = _mm256_set1_ps(dt);
 
 	for (int i = 0; i < particle_count; i += 8) {
 		__m256 particle_x_pos = _mm256_loadu_ps(x_position + i);
@@ -41,75 +42,27 @@ void Particles::update_gravity_velocities(const GravitySource& source) {
 		__m256 unit_v_x = _mm256_div_ps(diff_x, magn);
 		__m256 unit_v_y = _mm256_div_ps(diff_y, magn);
 		__m256 gravity_force = _mm256_xor_ps(_mm256_div_ps(force_const, _mm256_mul_ps(magn, magn)), _mm256_set1_ps(-0.0));
-		__m256 gravity_acceleration_x = _mm256_div_ps(_mm256_mul_ps(unit_v_x, gravity_force), mass_const);
-		__m256 gravity_acceleration_y = _mm256_div_ps(_mm256_mul_ps(unit_v_y, gravity_force), mass_const);
+		__m256 gravity_acceleration_x = _mm256_mul_ps(_mm256_div_ps(_mm256_mul_ps(unit_v_x, gravity_force), mass_const), delta_time);
+		__m256 gravity_acceleration_y = _mm256_mul_ps(_mm256_div_ps(_mm256_mul_ps(unit_v_y, gravity_force), mass_const), delta_time);
 		__m256 current_vel_x = _mm256_loadu_ps(x_velocity + i);
 		__m256 current_vel_y = _mm256_loadu_ps(y_velocity + i);
 		_mm256_storeu_ps(x_velocity + i, _mm256_add_ps(current_vel_x, gravity_acceleration_x));
 		_mm256_storeu_ps(y_velocity + i, _mm256_add_ps(current_vel_y, gravity_acceleration_y));
 		_mm256_zeroall();
 	}
-
-}
-
-void Particles::update_drag_velocities() {
-	/*for (int i = 0; i < particle_count; i++) {
-		float speed = magnitude(velocities[i]);
-		if (speed) {
-			sf::Vector2f unit_v_drag = velocities[i] / speed;
-			float drag_force = -1 * speed * speed * drag_coeff;
-			sf::Vector2f drag_acceleraton = unit_v_drag * drag_force;
-			velocities[i] += drag_acceleraton;
-		}
-		particles->operator[](i).position += (sf::Vector2f)velocities[i];
-	}*/
 }
 
 void Particles::update_positions(const int& width, const int& height) {
 	for (int i = 0; i < particle_count; i += 8) {
 		_mm256_storeu_ps(x_position + i, _mm256_add_ps(_mm256_loadu_ps(x_position + i), _mm256_loadu_ps(x_velocity + i)));
 		_mm256_storeu_ps(y_position + i, _mm256_add_ps(_mm256_loadu_ps(y_position + i), _mm256_loadu_ps(y_velocity + i)));
-		/*if (x_position[i] > width) x_position[i] = 0;
-		else if (x_position[i] < 0) x_position[i] = width;
-		if (x_position[i + 1] > width) x_position[i + 1] = 0;
-		else if (x_position[i + 1] < 0) x_position[i + 1] = width;
-		if (x_position[i + 2] > width) x_position[i + 2] = 0;
-		else if (x_position[i + 2] < 0) x_position[i + 2] = width;
-		if (x_position[i + 3] > width) x_position[i + 3] = 0;
-		else if (x_position[i + 3] < 0) x_position[i + 3] = width;
-		if (x_position[i + 4] > width) x_position[i + 4] = 0;
-		else if (x_position[i + 4] < 0) x_position[i + 4] = width;
-		if (x_position[i + 5] > width) x_position[i + 5] = 0;
-		else if (x_position[i + 5] < 0) x_position[i + 5] = width;
-		if (x_position[i + 6] > width) x_position[i + 6] = 0;
-		else if (x_position[i + 6] < 0) x_position[i + 6] = width;
-		if (x_position[i + 7] > width) x_position[i + 7] = 0;
-		else if (x_position[i + 7] < 0) x_position[i + 7] = width;
-		if (y_position[i] > height) y_position[i] = 0;
-		else if (y_position[i] < 0) y_position[i] = height;
-		if (y_position[i + 1] > height) y_position[i + 1] = 0;
-		else if (y_position[i + 1] < 0) y_position[i + 1] = height;
-		if (y_position[i + 2] > height) y_position[i + 2] = 0;
-		else if (y_position[i + 2] < 0) y_position[i + 2] = height;
-		if (y_position[i + 3] > height) y_position[i + 3] = 0;
-		else if (y_position[i + 3] < 0) y_position[i + 3] = height;
-		if (y_position[i + 4] > height) y_position[i + 4] = 0;
-		else if (y_position[i + 4] < 0) y_position[i + 4] = height;
-		if (y_position[i + 5] > height) y_position[i + 5] = 0;
-		else if (y_position[i + 5] < 0) y_position[i + 5] = height;
-		if (y_position[i + 6] > height) y_position[i + 6] = 0;
-		else if (y_position[i + 6] < 0) y_position[i + 6] = height;
-		if (y_position[i + 7] > height) y_position[i + 7] = 0;
-		else if (y_position[i + 7] < 0) y_position[i + 7] = height;*/
 	}
 }
 
-void Particles::update(const GravitySource& source, const int& width, const int& height) {
+void Particles::update(const GravitySource& source, const int& width, const int& height, float dt) {
 	if (source.is_active()) {
-		update_gravity_velocities(source);
+		update_gravity_velocities(source, dt);
 	}
-
-	//update_drag_velocities();
 	update_positions(width, height);
 }
 

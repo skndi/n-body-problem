@@ -20,7 +20,7 @@ public:
 	Simulator(int width, int height, int particle_count, const olc::Pixel& color);
 	bool OnUserCreate() override;
 	bool OnUserUpdate(float fElapsedTime) override;
-	void update();
+	void update(float dt);
 	void render();
 	void check_events();
 

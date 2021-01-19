@@ -25,12 +25,12 @@ private:
 
 public:
 	Particles(const int& particle_count, const int& mass, const olc::Pixel& color, const int& screen_width, const int& screen_height);
-	void update_gravity_velocities(const GravitySource& source);
+	void update_gravity_velocities(const GravitySource& source, float dt);
 	void update_drag_velocities();
 	void update_positions(const int& width, const int& height);
 	void render(olc::PixelGameEngine* window);
 	olc::Pixel get_color() const;
-	void update(const GravitySource& source, const int& width, const int& height);
+	void update(const GravitySource& source, const int& width, const int& height, float dt);
 	~Particles();
 
 };
